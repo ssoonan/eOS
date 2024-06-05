@@ -12,15 +12,15 @@
 
 #include <core/eos_internal.h>
 
-
 /********************************************************
  * Debugging module
  ********************************************************/
 
 void eos_printf(const char *fmt, ...);
 
-#define PRINT(format, a...) eos_printf("[%15s:%30s] ", __FILE__, __FUNCTION__); eos_printf(format, ## a);
-
+#define PRINT(format, a...)                             \
+    eos_printf("[%15s:%30s] ", __FILE__, __FUNCTION__); \
+    eos_printf(format, ##a);
 
 /********************************************************
  * Hardware abstraction module
@@ -39,13 +39,13 @@ void hal_ack_irq(int32u_t irq);
 
 /**
  * Enables interrupt service globally
- * Compared to the _os_interrupt_enable() function, 
+ * Compared to the _os_interrupt_enable() function,
  * this fuction always enables interrupt
  */
 void hal_enable_interrupt(void);
 
 /**
- * Disables interrupt service globally 
+ * Disables interrupt service globally
  * This function returns status of previous interrupt flag
  */
 int32u_t hal_disable_interrupt(void);
@@ -65,7 +65,6 @@ void hal_enable_irq_line(int32u_t irq);
  */
 void hal_disable_irq_line(int32u_t irq);
 
-
 /********************************************************
  * Interrupt management module
  ********************************************************/
@@ -84,22 +83,23 @@ typedef void (*eos_interrupt_handler_t)(int8s_t irq_num, void *arg);
  *              when interrupt occurrs
  */
 int8s_t eos_set_interrupt_handler(int8s_t irqnum,
-		eos_interrupt_handler_t handler, void *arg);
+                                  eos_interrupt_handler_t handler, void *arg);
 
 /* Returns interrupt handler installed for irqnum */
 eos_interrupt_handler_t eos_get_interrupt_handler(int8s_t irqnum);
-
 
 /********************************************************
  * Timer management module
  ********************************************************/
 
-typedef struct eos_counter {
+typedef struct eos_counter
+{
     int32u_t tick;
     _os_node_t *alarm_queue;
 } eos_counter_t;
 
-typedef struct eos_alarm {
+typedef struct eos_alarm
+{
     int32u_t timeout;
     void (*handler)(void *arg);
     void *arg;
@@ -108,22 +108,20 @@ typedef struct eos_alarm {
 
 int8u_t eos_init_counter(eos_counter_t *counter, int32u_t init_value);
 
-void eos_set_alarm(eos_counter_t* counter, eos_alarm_t* alarm,
-		int32u_t timeout, void (*entry)(void *arg), void *arg);
+void eos_set_alarm(eos_counter_t *counter, eos_alarm_t *alarm,
+                   int32u_t timeout, void (*entry)(void *arg), void *arg);
 
-eos_counter_t* eos_get_system_timer();
+eos_counter_t *eos_get_system_timer();
 
-void eos_trigger_counter(eos_counter_t* counter);
-
+void eos_trigger_counter(eos_counter_t *counter);
 
 /********************************************************
- * Wait queue types 
+ * Wait queue types
  * 	for semaphores, condition variables, message queues
  ********************************************************/
 
-#define FIFO 		0
-#define PRIORITY	1
-
+#define FIFO 0
+#define PRIORITY 1
 
 /********************************************************
  * Synchronization module
@@ -132,7 +130,8 @@ void eos_trigger_counter(eos_counter_t* counter);
 /**
  * Semaphore structure
  */
-typedef struct eos_semaphore {
+typedef struct eos_semaphore
+{
     // To be filled by students: Project 4
 } eos_semaphore_t;
 
@@ -155,7 +154,8 @@ void eos_release_semaphore(eos_semaphore_t *sem);
 /**
  * Condition variable structure
  */
-typedef struct eos_condition {
+typedef struct eos_condition
+{
     _os_node_t *wait_queue;
     int8u_t queue_type;
 } eos_condition_t;
@@ -180,15 +180,15 @@ extern int8u_t eos_lock_scheduler();
 extern void eos_restore_scheduler(int8u_t lock);
 extern int8u_t eos_get_scheduler_lock();
 
-
 /********************************************************
- * Message queue module 
+ * Message queue module
  ********************************************************/
 
 /**
  * Message queue structure
  */
-typedef struct eos_mqueue {
+typedef struct eos_mqueue
+{
     // To be filled by students: Project 4
 } eos_mqueue_t;
 
@@ -208,14 +208,22 @@ int8u_t eos_send_message(eos_mqueue_t *mq, void *message, int32s_t timeout);
  */
 int8u_t eos_receive_message(eos_mqueue_t *mq, void *message, int32s_t timeout);
 
-
 /********************************************************
  * Task management module
  ********************************************************/
 
 /* TCB (task control block) structure */
-typedef struct tcb {
-    // To by filled by students: Projects 2, 3, and 4
+typedef struct tcb
+{
+    int32u_t state;
+    int32u_t priority;
+    int32u_t period;
+    
+    int32u_t stack_start;
+    int32u_t stack_size;
+    int32u_t entry;
+    void* arg;
+
 } eos_tcb_t;
 
 /**
@@ -223,8 +231,8 @@ typedef struct tcb {
  * before calling this function
  */
 int32u_t eos_create_task(eos_tcb_t *task, addr_t sblock_start,
-		size_t sblock_size, void (*entry)(void *arg),
-		void *arg, int32u_t priority);
+                         size_t sblock_size, void (*entry)(void *arg),
+                         void *arg, int32u_t priority);
 
 int32u_t eos_destroy_task(eos_tcb_t *task);
 
