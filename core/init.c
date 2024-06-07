@@ -9,15 +9,15 @@
 
 #include <core/eos.h>
 
-static void _os_idle_task(void *arg);	// idle task
-static eos_tcb_t idle_task;		// tcb for the idle task
-static int8u_t idle_stack[8096];	// stack for the idle task
-
+static void _os_idle_task(void *arg); // idle task
+static eos_tcb_t idle_task;           // tcb for the idle task
+static int8u_t idle_stack[8096];      // stack for the idle task
 
 /*
  * This function is called by HAL after initializing H/W
  */
-void _os_init() {
+void _os_init()
+{
     // Interrupts and preemption must be disabled during initialziation
     hal_disable_interrupt();
     _os_scheduler_lock = LOCKED;
@@ -32,7 +32,7 @@ void _os_init() {
     // Creates an idle task
     PRINT("Creating an idle task\n");
     eos_create_task(&idle_task, (int32u_t *)idle_stack, 8096,
-		    _os_idle_task, NULL, LOWEST_PRIORITY);
+                    _os_idle_task, NULL, LOWEST_PRIORITY);
 
     // After finishing initialization, calls eos_user_main()
     void eos_user_main();
@@ -48,11 +48,14 @@ void _os_init() {
     eos_schedule();
 
     // Control never reaches here except Project 1
-    while (1) { }
+    while (1)
+    {
+    }
 }
-
 
 static void _os_idle_task(void *arg)
 {
-    while (1) { }
+    while (1)
+    {
+    }
 }

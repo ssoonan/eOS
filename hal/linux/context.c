@@ -70,7 +70,7 @@ void _os_restore_context(addr_t sp)
 {
     int32u_t sp_address = (int32u_t)sp;
     __asm__ __volatile__(
-        "movl %0 %%esp \n\t"
+        "movl %0, %%esp \n\t"
         "pop %%edi \n\t"
         "pop %%esi \n\t"
         "pop %%ebp \n\t"
@@ -79,7 +79,6 @@ void _os_restore_context(addr_t sp)
         "pop %%edx \n\t"
         "pop %%ecx \n\t"
         "pop %%eax \n\t"
-        "leave \n\t"
         "ret \n\t"
         :
         : "m"(sp_address));
@@ -89,21 +88,24 @@ addr_t _os_save_context()
 {
     addr_t sp_address;
     __asm__ __volatile__(
-        "push ebp \n\t" // 이게 prologue
-        "movl %%esp %%ebp"
-        "push _eflags \n\t"
-        "movl $0 %%eax \n\t"
+        "call 1f \n\t" // Call the label 1, this pushes the return address (current %eip) onto the stack
+        "1: pop %%eax \n\t"
+        "push %%ebp \n\t" // 이게 prologue
+        "movl %%esp, %%ebp \n\t"
+        "pushf \n\t"
+        "movl $0, %%eax \n\t"
         "push %%eax \n\t"
         "push %%ecx \n\t"
         "push %%edx \n\t"
         "push %%ebx \n\t"
-        // "push %%esp \n\t"
         "push %%ebp \n\t"
         "push %%esi \n\t"
         "push %%edi \n\t"
-        "movl %%esp %0 \n\t" // 이건 의미를 모르겠음
+        "movl %%esp, %0 \n\t"
+        "push -8(%%ebp) \n\t"
+        "push -4(%%ebp) \n\t"
         "leave \n\t"
         "ret \n\t"
-        :"=m"(sp_address));
+        : "=m"(sp_address));
     return sp_address;
 }

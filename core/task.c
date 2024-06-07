@@ -34,12 +34,19 @@ int32u_t eos_create_task(eos_tcb_t *task, addr_t sblock_start, size_t sblock_siz
     task->stack_size = sblock_size;
     task->entry = entry;
     task->arg = arg;
+    task->state = READY;
 
-    _os_node_t *head;
-    _os_node_t *node;
-    node->ptr_data = task;
+    _os_node_t *new_node = (_os_node_t *)malloc(sizeof(_os_node_t));
+    if (new_node == NULL)
+    {
+        return 0; // Memory allocation failed
+    }
+    new_node->ptr_data = (void *)task;
+    new_node->priority = priority;
+    new_node->previous = NULL;
+    new_node->next = NULL;
 
-    _os_add_node_priority(head, node);
+    _os_add_node_priority(&_os_ready_queue[priority], new_node);
 }
 
 int32u_t eos_destroy_task(eos_tcb_t *task)
@@ -51,10 +58,11 @@ void eos_schedule()
 {
     eos_tcb_t *tcb;
     addr_t sp_address = _os_save_context();
-    if (sp_address != NULL) {
+    if (sp_address != NULL)
+    {
         tcb->entry = sp_address;
     }
-   
+    PRINT("address: %d\n", (int)sp_address);
 }
 
 eos_tcb_t *eos_get_current_task()
