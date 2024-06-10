@@ -47,6 +47,7 @@ int32u_t eos_create_task(eos_tcb_t *task, addr_t sblock_start, size_t sblock_siz
     new_node->next = NULL;
 
     _os_add_node_priority(&_os_ready_queue[priority], new_node);
+    PRINT("task: 0x%x is created\n", (int32u_t)task);
 }
 
 int32u_t eos_destroy_task(eos_tcb_t *task)
@@ -56,13 +57,26 @@ int32u_t eos_destroy_task(eos_tcb_t *task)
 
 void eos_schedule()
 {
-    eos_tcb_t *tcb;
+    eos_tcb_t *prev_task = _os_current_task;
     addr_t sp_address = _os_save_context();
     if (sp_address != NULL)
     {
-        tcb->entry = sp_address;
+        prev_task->stack_start = sp_address;
     }
-    PRINT("address: %d\n", (int)sp_address);
+    for (int i = 0; i <= LOWEST_PRIORITY; i++)
+    {
+        if (_os_ready_queue[i] != NULL)
+        {
+            _os_current_task = (eos_tcb_t *)_os_ready_queue[i]->ptr_data;
+            _os_ready_queue[i] = _os_ready_queue[i]->next; // Move to the next task in the queue
+            break;
+        }
+    }
+
+    if (_os_current_task != NULL)
+    {
+        _os_restore_context(_os_current_task->stack_start); // Restore the context of the new task
+    }
 }
 
 eos_tcb_t *eos_get_current_task()

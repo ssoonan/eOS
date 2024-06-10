@@ -68,44 +68,55 @@ addr_t _os_create_context(addr_t stack_base, size_t stack_size, void (*entry)(vo
 
 void _os_restore_context(addr_t sp)
 {
-    int32u_t sp_address = (int32u_t)sp;
     __asm__ __volatile__(
         "movl %0, %%esp \n\t"
-        "pop %%edi \n\t"
-        "pop %%esi \n\t"
-        "pop %%ebp \n\t"
-        // "pop %%esp \n\t"
-        "pop %%ebx \n\t"
-        "pop %%edx \n\t"
-        "pop %%ecx \n\t"
-        "pop %%eax \n\t"
+        "popa \n\t"
+        "popf \n\t"
         "ret \n\t"
         :
-        : "m"(sp_address));
+        : "m"(sp));
 }
+
+// addr_t _os_save_context()
+// {
+//     addr_t sp_address;
+//     __asm__ __volatile__(
+//         "push %%ebp \n\t"
+//         "movl %%esp, %%ebp \n\t" // prologue
+//         // "call 1f \n\t" // Call the label 1, this pushes the return address (current %eip) onto the stack
+//         // "1: pop %%eax \n\t"
+//         // "push %%eax \n\t" // Push the EIP value onto the stack
+//         "pushf \n\t"
+//         "movl $0, %%eax \n\t"
+//         "pusha \n\t"
+//         "movl %%esp, %0 \n\t"
+//         "push 4(%%ebp) \n\t"
+//         "push %%ebp \n\t"
+//         "leave \n\t"
+//         "ret \n\t"
+//         : "=m"(sp_address));
+//     PRINT("asd: \n");
+//     return sp_address;
+// }
 
 addr_t _os_save_context()
 {
-    addr_t sp_address;
-    __asm__ __volatile__(
-        "call 1f \n\t" // Call the label 1, this pushes the return address (current %eip) onto the stack
-        "1: pop %%eax \n\t"
-        "push %%ebp \n\t" // 이게 prologue
-        "movl %%esp, %%ebp \n\t"
-        "pushf \n\t"
-        "movl $0, %%eax \n\t"
-        "push %%eax \n\t"
-        "push %%ecx \n\t"
-        "push %%edx \n\t"
-        "push %%ebx \n\t"
-        "push %%ebp \n\t"
-        "push %%esi \n\t"
-        "push %%edi \n\t"
-        "movl %%esp, %0 \n\t"
-        "push -8(%%ebp) \n\t"
-        "push -4(%%ebp) \n\t"
-        "leave \n\t"
-        "ret \n\t"
-        : "=m"(sp_address));
-    return sp_address;
+    // eax에 esp를 넣는 부분이, return 값을 넣어주는 부분이다.
+    __asm__ __volatile__("\
+		pushl $resume_eip;\
+		pushl _eflags;\
+		pushl %%eax;\
+		pushl %%ecx;\
+		pushl %%edx;\
+		pushl %%ebx;\
+		pushl %%esi;\
+		pushl %%edi;\
+		movl %%esp, %%eax;\
+		pushl 4(%%ebp);\
+		pushl 0(%%ebp);\
+		movl %%esp, %%ebp;\
+		resume_eip: \
+		leave;\
+		ret;\
+	" ::);
 }
