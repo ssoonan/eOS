@@ -216,13 +216,13 @@ int8u_t eos_receive_message(eos_mqueue_t *mq, void *message, int32s_t timeout);
 typedef struct tcb
 {
     int32u_t state;
-    int32u_t priority;
-    int32u_t period;
-    
-    int32u_t stack_start;
+    addr_t stack_pointer;
+    addr_t stack_start;
     int32u_t stack_size;
-    int32u_t entry;
-    void* arg;
+    void (*entry)(void *);
+
+    void *arg;
+    _os_node_t *queueing_node;
 
 } eos_tcb_t;
 

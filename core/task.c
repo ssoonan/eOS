@@ -27,11 +27,12 @@ static eos_tcb_t *_os_current_task;
 int32u_t eos_create_task(eos_tcb_t *task, addr_t sblock_start, size_t sblock_size, void (*entry)(void *arg), void *arg, int32u_t priority)
 {
     PRINT("task: 0x%x, priority: %d\n", (int32u_t)task, priority);
+    addr_t stack_pointer = _os_create_context(sblock_start, sblock_size, entry, arg);
 
     task->stack_start = sblock_start;
-    task->priority = priority;
-
+    task->stack_pointer = stack_pointer;
     task->stack_size = sblock_size;
+
     task->entry = entry;
     task->arg = arg;
     task->state = READY;
@@ -41,13 +42,14 @@ int32u_t eos_create_task(eos_tcb_t *task, addr_t sblock_start, size_t sblock_siz
     {
         return 0; // Memory allocation failed
     }
-    new_node->ptr_data = (void *)task;
+    new_node->ptr_data = task;
     new_node->priority = priority;
     new_node->previous = NULL;
     new_node->next = NULL;
+    task->queueing_node = new_node;
 
     _os_add_node_priority(&_os_ready_queue[priority], new_node);
-    PRINT("task: 0x%x is created\n", (int32u_t)task);
+    return 0;
 }
 
 int32u_t eos_destroy_task(eos_tcb_t *task)
@@ -57,25 +59,24 @@ int32u_t eos_destroy_task(eos_tcb_t *task)
 
 void eos_schedule()
 {
-    eos_tcb_t *prev_task = _os_current_task;
-    addr_t sp_address = _os_save_context();
-    if (sp_address != NULL)
+    if (eos_get_current_task())
     {
-        prev_task->stack_start = sp_address;
-    }
-    for (int i = 0; i <= LOWEST_PRIORITY; i++)
-    {
-        if (_os_ready_queue[i] != NULL)
-        {
-            _os_current_task = (eos_tcb_t *)_os_ready_queue[i]->ptr_data;
-            _os_ready_queue[i] = _os_ready_queue[i]->next; // Move to the next task in the queue
-            break;
-        }
+        addr_t stopped_esp = _os_save_context();
+
+        if (stopped_esp == NULL)
+            return;
+
+        _os_current_task->stack_start = stopped_esp;
+        _os_add_node_tail(&(_os_ready_queue[_os_current_task->queueing_node->priority]), _os_current_task->queueing_node);
     }
 
-    if (_os_current_task != NULL)
+    int32u_t priority = _os_get_highest_priority();
+    _os_node_t *new_current_node = _os_ready_queue[priority];
+    if (new_current_node)
     {
-        _os_restore_context(_os_current_task->stack_start); // Restore the context of the new task
+        _os_current_task = new_current_node->ptr_data;
+        _os_remove_node(&(_os_ready_queue[priority]), new_current_node);
+        _os_restore_context(_os_current_task->stack_pointer);
     }
 }
 

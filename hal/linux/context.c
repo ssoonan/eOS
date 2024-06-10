@@ -51,72 +51,50 @@ void print_context(addr_t context)
 
 addr_t _os_create_context(addr_t stack_base, size_t stack_size, void (*entry)(void *), void *arg)
 {
-    int32u_t *stack_base_address = (int32u_t *)stack_base;
-    int32u_t *stack_bottom = (int32u_t *)(stack_base_address + stack_size);
-    *stack_bottom = arg;
-    *(stack_bottom + 4) = NULL;
-    *(stack_bottom + 8) = entry;
-    *(stack_bottom + 12) = 1;
-    *(stack_bottom + 16) = NULL;
-    *(stack_bottom + 20) = NULL;
-    *(stack_bottom + 24) = NULL;
-    *(stack_bottom + 28) = NULL;
-    *(stack_bottom + 32) = NULL;
-    *(stack_bottom + 36) = NULL;
-    *(stack_bottom + 40) = NULL;
+    int32u_t *stack_pointer = (int32u_t *)((int8u_t *)stack_base + stack_size);
+
+    *(stack_pointer - 1) = (int32u_t)arg;
+    *(stack_pointer - 2) = (int32u_t)NULL;
+    *(stack_pointer - 3) = (int32u_t)entry;
+    *(stack_pointer - 4) = (int32u_t)1;
+
+    *(stack_pointer - 5) = (int32u_t)NULL;
+    *(stack_pointer - 6) = (int32u_t)NULL;
+    *(stack_pointer - 7) = (int32u_t)NULL;
+    *(stack_pointer - 8) = (int32u_t)NULL;
+    *(stack_pointer - 9) = (int32u_t)NULL;
+    *(stack_pointer - 10) = (int32u_t)NULL;
+    *(stack_pointer - 11) = (int32u_t)NULL;
+    *(stack_pointer - 12) = (int32u_t)NULL;
+    return (addr_t)(stack_pointer - 12);
 }
 
 void _os_restore_context(addr_t sp)
 {
-    __asm__ __volatile__(
-        "movl %0, %%esp \n\t"
-        "popa \n\t"
-        "popf \n\t"
-        "ret \n\t"
-        :
-        : "m"(sp));
+    __asm__ __volatile__("\
+		movl %0, %%esp;\
+		popa; \
+        popf; \
+        movl (%%esp), %%ebp;\
+		ret;\
+	" ::"m"(sp));
 }
-
-// addr_t _os_save_context()
-// {
-//     addr_t sp_address;
-//     __asm__ __volatile__(
-//         "push %%ebp \n\t"
-//         "movl %%esp, %%ebp \n\t" // prologue
-//         // "call 1f \n\t" // Call the label 1, this pushes the return address (current %eip) onto the stack
-//         // "1: pop %%eax \n\t"
-//         // "push %%eax \n\t" // Push the EIP value onto the stack
-//         "pushf \n\t"
-//         "movl $0, %%eax \n\t"
-//         "pusha \n\t"
-//         "movl %%esp, %0 \n\t"
-//         "push 4(%%ebp) \n\t"
-//         "push %%ebp \n\t"
-//         "leave \n\t"
-//         "ret \n\t"
-//         : "=m"(sp_address));
-//     PRINT("asd: \n");
-//     return sp_address;
-// }
 
 addr_t _os_save_context()
 {
     // eax에 esp를 넣는 부분이, return 값을 넣어주는 부분이다.
     __asm__ __volatile__("\
+        push %%ebp;\
+        movl %%esp, %%ebp;\
 		pushl $resume_eip;\
-		pushl _eflags;\
-		pushl %%eax;\
-		pushl %%ecx;\
-		pushl %%edx;\
-		pushl %%ebx;\
-		pushl %%esi;\
-		pushl %%edi;\
-		movl %%esp, %%eax;\
+		pushf; \
+        movl $0, %%eax; \
+        pusha; \
+		movl %%esp, %%eax;\ 
 		pushl 4(%%ebp);\
 		pushl 0(%%ebp);\
 		movl %%esp, %%ebp;\
 		resume_eip: \
 		leave;\
-		ret;\
-	" ::);
+		ret;\ " ::);
 }

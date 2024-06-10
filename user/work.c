@@ -7,8 +7,6 @@ static int8u_t stack1[STACK_SIZE]; // stack for task1
 static eos_tcb_t tcb0;
 static eos_tcb_t tcb1;
 
-static int8u_t stack0[STACK_SIZE];
-
 // tcb for task1
 static void print_numbers(void *arg)
 {
@@ -16,7 +14,7 @@ static void print_numbers(void *arg)
     int i = 1;
     while (1)
     {
-        printf("%d", i);
+        PRINT("%d\n", i);
         eos_schedule();
         // Yield CPU to task1
         if (i++ == 20)
@@ -31,7 +29,7 @@ static void print_alphabet(void *arg)
     int i = 97;
     while (1)
     {
-        printf("%c", i);
+        PRINT("%c\n", i);
         eos_schedule();
         // Yield CPU to task0
         if (i++ == 122)
