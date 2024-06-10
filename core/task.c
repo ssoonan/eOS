@@ -59,26 +59,41 @@ int32u_t eos_destroy_task(eos_tcb_t *task)
 
 void eos_schedule()
 {
-    if (eos_get_current_task())
+    int32u_t priority = 0;
+    // after boot, first time
+    if (_os_current_task == NULL)
+    {
+        _os_node_t *new_current_node = _os_ready_queue[priority];
+        if (new_current_node != NULL)
+        {
+            _os_current_task = (eos_tcb_t *)new_current_node->ptr_data;
+            _os_remove_node(&(_os_ready_queue[priority]), new_current_node);
+            _os_restore_context(_os_current_task->stack_pointer);
+        }
+    }
+    else
     {
         addr_t stopped_esp = _os_save_context();
-
-        if (stopped_esp == NULL)
+        // Return from restore
+        if (stopped_esp == NULL || stopped_esp == 0)
             return;
 
-        _os_current_task->stack_start = stopped_esp;
-        _os_add_node_tail(&(_os_ready_queue[_os_current_task->queueing_node->priority]), _os_current_task->queueing_node);
-    }
+        _os_current_task->stack_pointer = stopped_esp;
 
-    int32u_t priority = _os_get_highest_priority();
-    _os_node_t *new_current_node = _os_ready_queue[priority];
-    if (new_current_node)
-    {
-        _os_current_task = new_current_node->ptr_data;
-        _os_remove_node(&(_os_ready_queue[priority]), new_current_node);
-        _os_restore_context(_os_current_task->stack_pointer);
+        // Add current task back to the ready queue
+        _os_add_node_priority(&(_os_ready_queue[priority]), _os_current_task->queueing_node);
+
+        // Select the next task to run
+        _os_node_t *new_current_node = _os_ready_queue[priority];
+        if (new_current_node != NULL)
+        {
+            _os_current_task = new_current_node->ptr_data;
+            _os_remove_node(&(_os_ready_queue[priority]), new_current_node);
+            _os_restore_context(_os_current_task->stack_pointer);
+        }
     }
 }
+
 
 eos_tcb_t *eos_get_current_task()
 {
