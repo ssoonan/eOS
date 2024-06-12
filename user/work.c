@@ -42,6 +42,6 @@ void eos_user_main()
 {
     // This is the test code for Project 2
     // Note that you must use a priority of 0 only since the priority-based scheduling hasn’t been implemented yet
-    eos_create_task(&tcb0, (addr_t)stack0, STACK_SIZE, print_numbers, NULL, 0);
+    eos_create_task(&tcb0, (addr_t)stack0, STACK_SIZE, print_numbers, NULL, 1);
     eos_create_task(&tcb1, (addr_t)stack1, STACK_SIZE, print_alphabet, NULL, 0);
 }

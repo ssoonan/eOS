@@ -219,9 +219,10 @@ typedef struct tcb
     addr_t stack_pointer;
     addr_t stack_start;
     int32u_t stack_size;
-    void (*entry)(void *);
 
+    void (*entry)(void *);
     void *arg;
+
     _os_node_t *queueing_node;
 
 } eos_tcb_t;

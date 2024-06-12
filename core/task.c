@@ -37,6 +37,7 @@ int32u_t eos_create_task(eos_tcb_t *task, addr_t sblock_start, size_t sblock_siz
     task->entry = entry;
     task->arg = arg;
     task->state = READY;
+    _os_set_ready(priority);
 
     _os_node_t *new_node = (_os_node_t *)malloc(sizeof(_os_node_t));
     if (new_node == NULL)
@@ -60,9 +61,10 @@ int32u_t eos_destroy_task(eos_tcb_t *task)
 
 void eos_schedule()
 {
-    int32u_t priority = 0;
+    int32u_t priority = _os_get_highest_priority();
+    PRINT("highest priority: %d\n", priority);
     _os_node_t *new_current_node;
-    // after boot, first time -> not save but only restore the task
+    // 1. after boot, first time -> not save but only restore the task
     if (_os_current_task == NULL)
     {
         new_current_node = _os_ready_queue[priority];
@@ -72,11 +74,11 @@ void eos_schedule()
     else
     {
         addr_t stopped_esp = _os_save_context();
-        // Return from restore, exit
+        // 2. Return from restore, exit
         if (stopped_esp == NULL || stopped_esp == 0)
             return;
 
-        // record the saved task's stack pointer
+        // 3. record the saved task's stack pointer
         _os_current_task->stack_pointer = stopped_esp;
         // Add current task back to the ready queue
         _os_add_node_priority(&(_os_ready_queue[priority]), _os_current_task->queueing_node);
