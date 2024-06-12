@@ -49,46 +49,24 @@ void print_context(addr_t context)
     PRINT("edi  =0x%x\n", ctx->edi);
 }
 
-// addr_t _os_create_context(addr_t stack_base, size_t stack_size, void (*entry)(void *), void *arg)
-// {
-//     int32u_t *stack_pointer = (int32u_t *)((int8u_t *)stack_base + stack_size);
-
-//     *(stack_pointer - 1) = (int32u_t)arg;
-//     *(stack_pointer - 2) = (int32u_t)NULL;
-//     *(stack_pointer - 3) = (int32u_t)entry;
-//     *(stack_pointer - 4) = (int32u_t)1;
-
-//     *(stack_pointer - 5) = (int32u_t)NULL;
-//     *(stack_pointer - 6) = (int32u_t)NULL;
-//     *(stack_pointer - 7) = (int32u_t)NULL;
-//     *(stack_pointer - 8) = (int32u_t)NULL;
-//     *(stack_pointer - 9) = (int32u_t)NULL;
-//     *(stack_pointer - 10) = (int32u_t)NULL;
-//     *(stack_pointer - 11) = (int32u_t)NULL;
-//     *(stack_pointer - 12) = (int32u_t)NULL;
-//     return (addr_t)(stack_pointer - 12);
-// }
 addr_t _os_create_context(addr_t stack_base, size_t stack_size, void (*entry)(void *), void *arg)
 {
-    /* low address */
-    *(int32u_t *)(stack_base + stack_size / 4 - 48) = 0;
-    *(int32u_t *)(stack_base + stack_size / 4 - 44) = 0;
-    *(int32u_t *)(stack_base + stack_size / 4 - 40) = 0;
-    *(int32u_t *)(stack_base + stack_size / 4 - 36) = 0;
-    *(int32u_t *)(stack_base + stack_size / 4 - 32) = 0;
-    *(int32u_t *)(stack_base + stack_size / 4 - 28) = 0;
-    *(int32u_t *)(stack_base + stack_size / 4 - 24) = 0;
-    *(int32u_t *)(stack_base + stack_size / 4 - 20) = 0;
-    *(int32u_t *)(stack_base + stack_size / 4 - 16) = 1;
-    *(int32u_t *)(stack_base + stack_size / 4 - 12) = (int32u_t)(*entry);
-    *(int32u_t *)(stack_base + stack_size / 4 - 8) = 0;
-    *((void **)(stack_base + stack_size / 4 - 4)) = arg;
-    /*high address */
+    int32u_t *stack_pointer = (int32u_t *)((int8u_t *)stack_base + stack_size);
 
-    // return address
-    int32u_t *return_addr = (int32u_t *)(stack_base + stack_size / 4 - 48);
+    *(stack_pointer - 1) = (int32u_t)arg;
+    *(stack_pointer - 2) = (int32u_t)NULL;
+    *(stack_pointer - 3) = (int32u_t)entry;
+    *(stack_pointer - 4) = (int32u_t)1;
 
-    return (addr_t)return_addr;
+    *(stack_pointer - 5) = (int32u_t)NULL;
+    *(stack_pointer - 6) = (int32u_t)NULL;
+    *(stack_pointer - 7) = (int32u_t)NULL;
+    *(stack_pointer - 8) = (int32u_t)NULL;
+    *(stack_pointer - 9) = (int32u_t)NULL;
+    *(stack_pointer - 10) = (int32u_t)NULL;
+    *(stack_pointer - 11) = (int32u_t)NULL;
+    *(stack_pointer - 12) = (int32u_t)NULL;
+    return (addr_t)(stack_pointer - 12);
 }
 
 void _os_restore_context(addr_t sp)
@@ -101,29 +79,6 @@ void _os_restore_context(addr_t sp)
 		ret;\
 	" ::"r"(sp));
 }
-
-// addr_t _os_save_context()
-// {
-//     addr_t result = NULL;
-//     __asm__ __volatile__(
-//         "push %%ebp;\n"
-//         "movl %%esp, %%ebp;\n"
-//         "movl $0, %%eax;\n"    // Clear eax
-//         "push $resume_eip;\n" // Save the return address (resume point)
-//         "pushf;\n"             // Save the flags register
-//         "pusha;\n"             // Save all general-purpose registers
-//         "movl %%esp, %%eax;\n" // Move the current stack pointer into eax
-//         "movl %%eax, %0;\n"
-//         "push 4(%%ebp);\n" // Push the value at ebp+4 (return address) onto the stack
-//         "push (%%ebp);\n"  // Push the value at ebp (old base pointer) onto the stack
-//         "movl %%esp, %%ebp;\n"
-//         "resume_eip:\n" // Define the label resume_eip
-//         "leave;\n"
-//         // "ret;\n"
-//         : "=r"(result) // Output operand: tie eax to the result variable
-//     );
-//     return result;
-// }
 
 addr_t _os_save_context()
 {

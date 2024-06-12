@@ -8,6 +8,7 @@
  ********************************************************/
 
 #include <core/eos.h>
+#include "eos.h"
 
 #define READY 1
 #define RUNNING 2
@@ -60,40 +61,40 @@ int32u_t eos_destroy_task(eos_tcb_t *task)
 void eos_schedule()
 {
     int32u_t priority = 0;
-    // after boot, first time
+    _os_node_t *new_current_node;
+    // after boot, first time -> not save but only restore the task
     if (_os_current_task == NULL)
     {
-        _os_node_t *new_current_node = _os_ready_queue[priority];
-        if (new_current_node != NULL)
-        {
-            _os_current_task = (eos_tcb_t *)new_current_node->ptr_data;
-            _os_remove_node(&(_os_ready_queue[priority]), new_current_node);
-            _os_restore_context(_os_current_task->stack_pointer);
-        }
+        new_current_node = _os_ready_queue[priority];
+        PRINT("after boot, first time\n");
+        restore_and_erase_new_node(new_current_node, priority);
     }
     else
     {
         addr_t stopped_esp = _os_save_context();
-        // Return from restore
+        // Return from restore, exit
         if (stopped_esp == NULL || stopped_esp == 0)
             return;
 
+        // record the saved task's stack pointer
         _os_current_task->stack_pointer = stopped_esp;
-
         // Add current task back to the ready queue
         _os_add_node_priority(&(_os_ready_queue[priority]), _os_current_task->queueing_node);
 
-        // Select the next task to run
-        _os_node_t *new_current_node = _os_ready_queue[priority];
-        if (new_current_node != NULL)
-        {
-            _os_current_task = new_current_node->ptr_data;
-            _os_remove_node(&(_os_ready_queue[priority]), new_current_node);
-            _os_restore_context(_os_current_task->stack_pointer);
-        }
+        // Select the next task to run.
+        new_current_node = _os_ready_queue[priority];
+        restore_and_erase_new_node(new_current_node, priority);
     }
 }
 
+void restore_and_erase_new_node(_os_node_t *new_current_node, int32u_t priority)
+{
+    if (new_current_node == NULL)
+        return;
+    _os_current_task = new_current_node->ptr_data;
+    _os_remove_node(&(_os_ready_queue[priority]), new_current_node);
+    _os_restore_context(_os_current_task->stack_pointer);
+}
 
 eos_tcb_t *eos_get_current_task()
 {

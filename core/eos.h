@@ -238,6 +238,8 @@ int32u_t eos_destroy_task(eos_tcb_t *task);
 
 void eos_schedule();
 
+void restore_and_erase_new_node(_os_node_t *new_current_node, int32u_t priority);
+
 eos_tcb_t *eos_get_current_task();
 
 /**
