@@ -19,6 +19,8 @@ int8u_t _os_scheduler_lock;
 /* Mapping table */
 int8u_t const _os_map_table[] =
 	{ 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
+
+    // 16 * 16
 int8u_t const _os_unmap_table[] = {
     0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
     4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,

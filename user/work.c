@@ -1,11 +1,12 @@
 #include <core/eos.h>
 #define STACK_SIZE 8096
 
-static int8u_t stack0[STACK_SIZE]; // stack for task0
-static int8u_t stack1[STACK_SIZE]; // stack for task1
-
-static eos_tcb_t tcb0;
-static eos_tcb_t tcb1;
+int32u_t stack0[STACK_SIZE];
+int32u_t stack1[STACK_SIZE];
+int32u_t stack2[STACK_SIZE];
+eos_tcb_t tcb0;
+eos_tcb_t tcb1;
+eos_tcb_t tcb2;
 
 // tcb for task1
 static void print_numbers(void *arg)
@@ -38,10 +39,38 @@ static void print_alphabet(void *arg)
         }
     }
 }
+void task0()
+{
+    while (1)
+    {
+        PRINT("A\n");
+        eos_sleep(0);
+    } // ‘A 출력 후 다음 주기까지 기다림
+}
+void task1()
+{
+    while (1)
+    {
+        PRINT("B\n");
+        eos_sleep(0);
+    } // ‘B’ 출력 후 다음 주기까지 기다림
+}
+void task2()
+{
+    while (1)
+    {
+        PRINT("C\n");
+        eos_sleep(0);
+    } // ‘C’ 출력 후 다음 주기까지 기다림
+}
 void eos_user_main()
 {
-    // This is the test code for Project 2
-    // Note that you must use a priority of 0 only since the priority-based scheduling hasn’t been implemented yet
-    eos_create_task(&tcb0, (addr_t)stack0, STACK_SIZE, print_numbers, NULL, 1);
-    eos_create_task(&tcb1, (addr_t)stack1, STACK_SIZE, print_alphabet, NULL, 0);
+    eos_create_task(&tcb0, stack0, STACK_SIZE, task0, NULL, 1);
+    eos_set_period(&tcb0, 2);
+    // 태스크 0 생성
+    eos_create_task(&tcb1, stack1, STACK_SIZE, task1, NULL, 10);
+    eos_set_period(&tcb1, 4); // 태스크 1 생성
+
+    eos_create_task(&tcb2, stack2, STACK_SIZE, task2, NULL, 50);
+    eos_set_period(&tcb2, 8);
 }

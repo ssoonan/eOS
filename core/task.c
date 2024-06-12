@@ -95,6 +95,9 @@ void restore_and_erase_new_node(_os_node_t *new_current_node, int32u_t priority)
         return;
     _os_current_task = new_current_node->ptr_data;
     _os_remove_node(&(_os_ready_queue[priority]), new_current_node);
+
+    if (_os_ready_queue[priority] == NULL)
+        _os_unset_ready(priority);
     _os_restore_context(_os_current_task->stack_pointer);
 }
 
@@ -115,12 +118,12 @@ int32u_t eos_get_priority(eos_tcb_t *task)
 
 void eos_set_period(eos_tcb_t *task, int32u_t period)
 {
-    // To be filled by students: Project 3
+    task->period = period;
 }
 
 int32u_t eos_get_period(eos_tcb_t *task)
 {
-    // To be filled by students: not covered
+    return task->period;
 }
 
 int32u_t eos_suspend_task(eos_tcb_t *task)
@@ -135,7 +138,15 @@ int32u_t eos_resume_task(eos_tcb_t *task)
 
 void eos_sleep(int32u_t tick)
 {
-    // To be filled by students: Project 3
+    if (tick == 0)
+    {
+        // 1. if period
+        // 2. else
+    }
+    else
+    {
+        // 3. 콜백으로 tick만큼 대기 by eos_set_alarm
+    }
 }
 
 void _os_init_task()
@@ -167,8 +178,11 @@ void _os_wakeup_all(_os_node_t **wait_queue, int32u_t queue_type)
     // To be filled by students: not covered
 }
 
-void _os_wakeup_sleeping_task(void *arg)
+void _os_wakeup_sleeping_task(eos_tcb_t *task)
 {
-    // To be filled by students: Project 3
-    eos_tcb_t *task = (eos_tcb_t *)arg;
+    // 일단 둘 다 바꿈
+    task->state = READY;
+    _os_set_ready(task->queueing_node->priority);
+    // TODO: ready queue에 넣는 과정까지 필요
+    // _os_add_node_priority(&(_os_ready_queue[task->queueing_node->priority]))
 }

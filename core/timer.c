@@ -23,7 +23,10 @@ int8u_t eos_init_counter(eos_counter_t *counter, int32u_t init_value)
 
 void eos_set_alarm(eos_counter_t* counter, eos_alarm_t* alarm, int32u_t timeout, void (*entry)(void *arg), void *arg)
 {
-    // To be filled by students: Project 3
+    alarm->timeout = timeout;
+    alarm->handler = entry;
+    alarm->arg = arg;
+    _os_add_node_tail(counter->alarm_queue, alarm);
 }
 
 
@@ -36,7 +39,6 @@ eos_counter_t* eos_get_system_timer()
 void eos_trigger_counter(eos_counter_t* counter)
 {
     PRINT("tick\n");
-    // To be filled by students: Project 3
 }
 
 

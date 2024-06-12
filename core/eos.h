@@ -220,6 +220,8 @@ typedef struct tcb
     addr_t stack_start;
     int32u_t stack_size;
 
+    int32u_t period;
+
     void (*entry)(void *);
     void *arg;
 
