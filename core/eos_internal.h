@@ -82,7 +82,7 @@ void _os_init_timer();
 void _os_wait(_os_node_t **wait_queue);
 void _os_wakeup_single(_os_node_t **wait_queue, int32u_t suspend_type);
 void _os_wakeup_all(_os_node_t **wait_queue, int32u_t suspend_type);
-void _os_wakeup_sleeping_task(eos_tcb_t *task);
+void _os_wakeup_sleeping_task(void *task);
 
 
 /********************************************************

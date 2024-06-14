@@ -221,6 +221,7 @@ typedef struct tcb
     int32u_t stack_size;
 
     int32u_t period;
+    int32u_t sleep_at;
 
     void (*entry)(void *);
     void *arg;

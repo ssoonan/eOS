@@ -62,7 +62,7 @@ int32u_t eos_destroy_task(eos_tcb_t *task)
 void eos_schedule()
 {
     int32u_t priority = _os_get_highest_priority();
-    PRINT("highest priority: %d\n", priority);
+    // PRINT("highest priority: %d\n", priority);
     _os_node_t *new_current_node;
     // 1. after boot, first time -> not save but only restore the task
     if (_os_current_task == NULL)
@@ -80,8 +80,10 @@ void eos_schedule()
 
         // 3. record the saved task's stack pointer
         _os_current_task->stack_pointer = stopped_esp;
-        // Add current task back to the ready queue
-        _os_add_node_priority(&(_os_ready_queue[priority]), _os_current_task->queueing_node);
+
+        if (_os_current_task->state != WAITING)
+            // Add current task back to the ready queue
+            _os_add_node_priority(&(_os_ready_queue[priority]), _os_current_task->queueing_node);
 
         // Select the next task to run.
         new_current_node = _os_ready_queue[priority];
@@ -138,15 +140,23 @@ int32u_t eos_resume_task(eos_tcb_t *task)
 
 void eos_sleep(int32u_t tick)
 {
+    eos_tcb_t *current_task = eos_get_current_task();
+    eos_counter_t *system_timer = eos_get_system_timer();
     if (tick == 0)
     {
-        // 1. if period
-        // 2. else
+        if (current_task->period != 0)
+            tick = current_task->period;
+        else
+            tick = 2147483647;
     }
-    else
-    {
-        // 3. 콜백으로 tick만큼 대기 by eos_set_alarm
-    }
+
+    eos_alarm_t *new_alarm = malloc(sizeof(eos_alarm_t));
+    current_task->sleep_at = system_timer->tick;
+    eos_set_alarm(system_timer, new_alarm, tick, _os_wakeup_sleeping_task, current_task);
+
+    current_task->state = WAITING;
+    _os_remove_node(&(_os_ready_queue[current_task->queueing_node->priority]), current_task->queueing_node);
+    eos_schedule();
 }
 
 void _os_init_task()
@@ -178,11 +188,13 @@ void _os_wakeup_all(_os_node_t **wait_queue, int32u_t queue_type)
     // To be filled by students: not covered
 }
 
-void _os_wakeup_sleeping_task(eos_tcb_t *task)
+void _os_wakeup_sleeping_task(void *task)
 {
+    eos_tcb_t *eos_task = (eos_tcb_t *)task;
     // 일단 둘 다 바꿈
-    task->state = READY;
-    _os_set_ready(task->queueing_node->priority);
-    // TODO: ready queue에 넣는 과정까지 필요
-    // _os_add_node_priority(&(_os_ready_queue[task->queueing_node->priority]))
+    eos_task->state = READY;
+    _os_set_ready(eos_task->queueing_node->priority);
+    // after changing the state, insert to ready_queue
+    _os_add_node_priority(&(_os_ready_queue[eos_task->queueing_node->priority]), eos_task->queueing_node);
+    eos_schedule();
 }
