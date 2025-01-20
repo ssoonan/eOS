@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include "private.h"
+#include <newlib/sys/types.h>
 
 static timer_t * _interval_timer;
 
