@@ -1,7 +1,7 @@
 TARGET := $(shell pwd)/module.a
 
 # subdirs that contain Makefile
-subdir_makefiles := $(shell find -L ./ -name Makefile)
+subdir_makefiles := $(shell find ./ -name Makefile -type f)
 #hal_makefiles := $(filter ./hal%,$(subdir_makefiles))
 #unrel_hal_makefiles := $(filter-out ./hal/$(HAL)%,$(hal_makefiles))
 #subdir_makefiles := $(filter-out $(unrel_hal_makefiles),$(subdir_makefiles))
@@ -28,6 +28,7 @@ $(patsubst %,_clean_%,$(subdirs)):
 # cleaning this directory
 clean_: $(subdir_cleans)
 	rm -rf $(TARGET) $(OBJS)
+	rm -rf hal/current	
 
 C_SRCS := $(wildcard *.c)
 S_SRCS := $(wildcard *.S)
