@@ -42,7 +42,7 @@ int32u_t eos_create_task(eos_tcb_t *task, addr_t sblock_start, size_t sblock_siz
     _os_node_t *new_node = (_os_node_t *)malloc(sizeof(_os_node_t));
     if (new_node == NULL)
     {
-        return 0; // Memory allocation failed
+        return 0; // Memory allocation failed`
     }
     new_node->ptr_data = task;
     new_node->priority = priority;
