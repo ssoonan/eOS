@@ -152,7 +152,7 @@ void eos_sleep(int32u_t tick)
 
     eos_alarm_t *new_alarm = malloc(sizeof(eos_alarm_t));
     current_task->sleep_at = system_timer->tick;
-    eos_set_alarm(system_timer, new_alarm, tick, _os_wakeup_sleeping_task, current_task);
+    eos_set_alarm(&(system_timer->alarm_queue), new_alarm, tick, _os_wakeup_sleeping_task, current_task);
 
     current_task->state = WAITING;
     _os_remove_node(&(_os_ready_queue[current_task->queueing_node->priority]), current_task->queueing_node);

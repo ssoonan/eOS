@@ -108,7 +108,7 @@ typedef struct eos_alarm
 
 int8u_t eos_init_counter(eos_counter_t *counter, int32u_t init_value);
 
-void eos_set_alarm(eos_counter_t *counter, eos_alarm_t *alarm,
+void eos_set_alarm(_os_node_t **head, eos_alarm_t *alarm,
                    int32u_t timeout, void (*entry)(void *arg), void *arg);
 
 eos_counter_t *eos_get_system_timer();

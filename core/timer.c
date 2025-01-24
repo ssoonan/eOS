@@ -19,9 +19,9 @@ int8u_t eos_init_counter(eos_counter_t *counter, int32u_t init_value)
     return 0;
 }
 
-void eos_set_alarm(eos_counter_t *counter, eos_alarm_t *alarm, int32u_t timeout, void (*entry)(void *arg), void *arg)
+void eos_set_alarm(_os_node_t **head, eos_alarm_t *alarm, int32u_t timeout, void (*entry)(void *arg), void *arg)
 {
-    _os_remove_node(&(counter->alarm_queue), &(alarm->alarm_queue_node));
+    _os_remove_node(head, &(alarm->alarm_queue_node));
     if (timeout == 0 || timeout == NULL)
         return;
 
@@ -32,7 +32,7 @@ void eos_set_alarm(eos_counter_t *counter, eos_alarm_t *alarm, int32u_t timeout,
     alarm->alarm_queue_node.ptr_data = alarm;
     alarm->alarm_queue_node.priority = timeout;
 
-    _os_add_node_tail(&(counter->alarm_queue), &(alarm->alarm_queue_node));
+    _os_add_node_tail(head, &(alarm->alarm_queue_node));
 }
 
 eos_counter_t *eos_get_system_timer()
@@ -67,7 +67,7 @@ static void timer_interrupt_handler(int8s_t irqnum, void *arg)
 {
     /* Triggers alarms */
     eos_trigger_counter(&system_timer, NULL);
-    eos_trigger_counter(&system_timer, NULL);
+    // eos_trigger_counter(&system_timer, NULL);
 }
 
 void _os_init_timer()

@@ -24,6 +24,14 @@ void eos_printf(const char *fmt, ...)
     _os_serial_puts(printbuffer);
 }
 
+/* 
+  circular queue 기준 tail에 넣기
+  1. new_node 앞=previous 기존 끝=head_previous 삽입
+  2. new_node 앞=previous 뒤=next = new_node (doubly linked니까)
+  3. new_node 뒤=next head
+  4. new_node 뒤=next의 previous = new_node
+  + head가 없을 때 head를 추가하기 위해 **를 사용
+*/ 
 
 void _os_add_node_tail(_os_node_t **head, _os_node_t *new_node)
 {
