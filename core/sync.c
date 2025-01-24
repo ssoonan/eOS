@@ -13,39 +13,53 @@ void eos_init_semaphore(eos_semaphore_t *sem, int32u_t initial_count, int8u_t qu
 {
     sem->count = initial_count;
     sem->queue_type = queue_type;
+    sem->wait_queue = NULL;
 }
 
 int32u_t eos_acquire_semaphore(eos_semaphore_t *sem, int32s_t timeout)
 {
-    eos_counter_t *system_timer = eos_get_system_timer();
+    // 0) semaphore가 있을 때 -> 성공
     if (sem->count > 0)
     {
+        int32u_t flag = hal_disable_interrupt();
         sem->count -= 1;
-        return sem->count;
+        hal_restore_interrupt(flag);
+        return 1;
     }
-    else
+    // 1) 2) 3) semaphore가 없을 때 -> timeout 따른 추가 로직
+    // 1) timeout이 음수일 땐 바로 리턴 -> count>0 일 때만 전제
+    if (timeout == -1)
+        return 0;
+    // 2) timeout 양수 -> 해당 시간만큼 대기,
+    else if (timeout >= 1)
     {
-        // timeout이 음수일 땐 바로 리턴 -> count>0 일 때만 전제
-        if (timeout == -1)
-            return 0;
-        else if (timeout >= 1)
+        _eos_sleep(timeout, &(sem->wait_queue));
+        // 3-1) 깨어난 뒤 count > 0 -> 성공
+        if (sem->count > 0)
         {
-            eos_alarm_t *new_alarm = malloc(sizeof(eos_alarm_t));
-            eos_tcb_t *current_task = eos_get_current_task();
-            current_task->sleep_at = system_timer->tick;
-            eos_set_alarm(system_timer, new_alarm, timeout, _os_wakeup_sleeping_task, current_task);
-            // _os_add_node_priority(&(sem->wait_queue), current_task->queueing_node); wait queue를 이렇게 별도로 둬야하는지?
+            int32u_t flag = hal_disable_interrupt();
+            sem->count -= 1;
+            hal_restore_interrupt(flag);
+            return 1;
         }
-        // timeout == 0
-        else {
-            eos_sleep(0);
-        }
+        // 3-2) 깨어난 뒤 count <=0 -> 다시 무한정 대기
+        _eos_sleep(0, &(sem->wait_queue));
     }
 }
 
 void eos_release_semaphore(eos_semaphore_t *sem)
 {
-    // To be filled by students: Project 4
+    int32u_t flag = hal_disable_interrupt();
+    sem->count += 1;
+    hal_restore_interrupt(flag);
+
+    _os_node_t *head = sem->wait_queue;
+    if (head)
+    {
+        eos_tcb_t *sleeping_task = (eos_tcb_t *)(head);
+        _os_wakeup_sleeping_task(sleeping_task);
+        _os_remove_node(&head, head);
+    }
 }
 
 /**

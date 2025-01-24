@@ -10,16 +10,6 @@
 #include <core/eos.h>
 #include "eos.h"
 
-#define READY 1
-#define RUNNING 2
-#define WAITING 3
-#define SUSPENDED 4
-
-/**
- * Runqueue of ready tasks
- */
-static _os_node_t *_os_ready_queue[LOWEST_PRIORITY + 1];
-
 /**
  * Pointer to TCB of the running task
  */
@@ -140,6 +130,11 @@ int32u_t eos_resume_task(eos_tcb_t *task)
 
 void eos_sleep(int32u_t tick)
 {
+    _eos_sleep(tick, &(eos_get_system_timer()->alarm_queue));
+}
+
+void _eos_sleep(int32u_t tick, _os_node_t **wait_queue)
+{
     eos_tcb_t *current_task = eos_get_current_task();
     eos_counter_t *system_timer = eos_get_system_timer();
     if (tick == 0)
@@ -152,7 +147,7 @@ void eos_sleep(int32u_t tick)
 
     eos_alarm_t *new_alarm = malloc(sizeof(eos_alarm_t));
     current_task->sleep_at = system_timer->tick;
-    eos_set_alarm(&(system_timer->alarm_queue), new_alarm, tick, _os_wakeup_sleeping_task, current_task);
+    eos_set_alarm(wait_queue, new_alarm, tick, _os_wakeup_sleeping_task, current_task);
 
     current_task->state = WAITING;
     _os_remove_node(&(_os_ready_queue[current_task->queueing_node->priority]), current_task->queueing_node);

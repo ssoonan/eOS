@@ -22,6 +22,16 @@ void eos_printf(const char *fmt, ...);
     eos_printf("[%15s:%30s] ", __FILE__, __FUNCTION__); \
     eos_printf(format, ##a);
 
+#define READY 1
+#define RUNNING 2
+#define WAITING 3
+#define SUSPENDED 4
+
+/**
+ * Runqueue of ready tasks
+ */
+static _os_node_t *_os_ready_queue[LOWEST_PRIORITY + 1];
+
 /********************************************************
  * Hardware abstraction module
  ********************************************************/
@@ -108,7 +118,7 @@ typedef struct eos_alarm
 
 int8u_t eos_init_counter(eos_counter_t *counter, int32u_t init_value);
 
-void eos_set_alarm(_os_node_t **head, eos_alarm_t *alarm,
+void eos_set_alarm(_os_node_t **wait_queue, eos_alarm_t *alarm,
                    int32u_t timeout, void (*entry)(void *arg), void *arg);
 
 eos_counter_t *eos_get_system_timer();
@@ -284,5 +294,6 @@ int32u_t eos_suspend_task(eos_tcb_t *task);
 int32u_t eos_resume_task(eos_tcb_t *task);
 
 void eos_sleep(int32u_t tick);
+void _eos_sleep(int32u_t tick, _os_node_t **wait_queue);
 
 #endif /*EOS_H*/
