@@ -113,7 +113,7 @@ void eos_set_alarm(eos_counter_t *counter, eos_alarm_t *alarm,
 
 eos_counter_t *eos_get_system_timer();
 
-void eos_trigger_counter(eos_counter_t *counter);
+void eos_trigger_counter(eos_counter_t *counter, _os_node_t **queue);
 
 /********************************************************
  * Wait queue types
@@ -134,7 +134,7 @@ typedef struct eos_semaphore
 {
     int32s_t count;
     int8u_t queue_type;
-    _os_node_t wait_queue;
+    _os_node_t *wait_queue;
 
 } eos_semaphore_t;
 

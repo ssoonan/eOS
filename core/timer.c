@@ -40,11 +40,15 @@ eos_counter_t *eos_get_system_timer()
     return &system_timer;
 }
 
-void eos_trigger_counter(eos_counter_t *counter)
+void eos_trigger_counter(eos_counter_t *counter, _os_node_t **queue)
 {
     PRINT("tick\n");
     counter->tick += 1;
-    _os_node_t *head = counter->alarm_queue;
+    _os_node_t *head;
+    if (queue)
+        head = *queue;
+    else
+        head = counter->alarm_queue;
     _os_node_t *alarm_node = head;
     while (1)
     {
@@ -62,7 +66,8 @@ void eos_trigger_counter(eos_counter_t *counter)
 static void timer_interrupt_handler(int8s_t irqnum, void *arg)
 {
     /* Triggers alarms */
-    eos_trigger_counter(&system_timer);
+    eos_trigger_counter(&system_timer, NULL);
+    eos_trigger_counter(&system_timer, NULL);
 }
 
 void _os_init_timer()
