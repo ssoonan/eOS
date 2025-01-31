@@ -295,5 +295,6 @@ int32u_t eos_resume_task(eos_tcb_t *task);
 
 void eos_sleep(int32u_t tick);
 void _eos_sleep(int32u_t tick, _os_node_t **wait_queue);
+void _current_task_to_wait_queue(_os_node_t **wait_queue);
 
 #endif /*EOS_H*/

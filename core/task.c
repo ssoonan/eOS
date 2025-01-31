@@ -17,7 +17,6 @@ static eos_tcb_t *_os_current_task;
 
 int32u_t eos_create_task(eos_tcb_t *task, addr_t sblock_start, size_t sblock_size, void (*entry)(void *arg), void *arg, int32u_t priority)
 {
-    PRINT("task: 0x%x, priority: %d\n", (int32u_t)task, priority);
     addr_t stack_pointer = _os_create_context(sblock_start, sblock_size, entry, arg);
 
     task->stack_start = sblock_start;
@@ -131,6 +130,15 @@ int32u_t eos_resume_task(eos_tcb_t *task)
 void eos_sleep(int32u_t tick)
 {
     _eos_sleep(tick, &(eos_get_system_timer()->alarm_queue));
+}
+
+void _current_task_to_wait_queue(_os_node_t **wait_queue)
+{
+    eos_tcb_t *current_task = eos_get_current_task();
+    current_task->state = WAITING;
+    _os_remove_node(&(_os_ready_queue[current_task->queueing_node->priority]), current_task->queueing_node);
+    _os_add_node_tail(wait_queue, current_task->queueing_node);
+    eos_schedule();
 }
 
 void _eos_sleep(int32u_t tick, _os_node_t **wait_queue)

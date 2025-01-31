@@ -30,20 +30,27 @@ int32u_t eos_acquire_semaphore(eos_semaphore_t *sem, int32s_t timeout)
     // 1) timeout이 음수일 땐 바로 리턴 -> count>0 일 때만 전제
     if (timeout == -1)
         return 0;
-    // 2) timeout 양수 -> 해당 시간만큼 대기,
+    // 2) timeout 양수 -> 해당 시간만큼 대기, 이후 다시 체크
     else if (timeout >= 1)
     {
-        _eos_sleep(timeout, &(sem->wait_queue));
-        // 3-1) 깨어난 뒤 count > 0 -> 성공
-        if (sem->count > 0)
+        eos_sleep(timeout);
+        return 0;
+    }
+    // 3) 무한히 wait, 깨어난 이후 다시 검사
+    else
+    {
+        while (1)
         {
-            int32u_t flag = hal_disable_interrupt();
-            sem->count -= 1;
-            hal_restore_interrupt(flag);
-            return 1;
+            _current_task_to_wait_queue(&(sem->wait_queue));
+            // 3-1) 깨어난 뒤 count > 0 -> 성공
+            while (sem->count > 0)
+            {
+                int32u_t flag = hal_disable_interrupt();
+                sem->count -= 1;
+                hal_restore_interrupt(flag);
+                return 1;
+            }
         }
-        // 3-2) 깨어난 뒤 count <=0 -> 다시 무한정 대기
-        _eos_sleep(0, &(sem->wait_queue));
     }
 }
 
@@ -57,7 +64,7 @@ void eos_release_semaphore(eos_semaphore_t *sem)
     if (head)
     {
         _os_wakeup_sleeping_task(head->ptr_data);
-        _os_remove_node(&sem->wait_queue, head);
+        _os_remove_node(&(sem->wait_queue), head);
     }
 }
 
