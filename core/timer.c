@@ -54,10 +54,14 @@ void eos_trigger_counter(eos_counter_t *counter, _os_node_t **queue)
     {
         eos_alarm_t *alarm = alarm_node->ptr_data;
         eos_tcb_t *alarm_task = (eos_tcb_t *)(alarm->arg);
-        if (counter->tick >= alarm_task->sleep_at + alarm->timeout)
+        _os_node_t *next_node = alarm_node->next;
+
+        if (counter->tick >= alarm_task->sleep_at + alarm->timeout) {
             alarm->handler(alarm->arg);
-        alarm_node = alarm_node->next;
-        if (alarm_node == head)
+            _os_remove_node(&(eos_get_system_timer()->alarm_queue), &alarm->alarm_queue_node);
+        }
+        alarm_node = next_node;
+        if (alarm_node == head) // 다 돌았을 때 종료
             break;
     }
 }
@@ -67,7 +71,6 @@ static void timer_interrupt_handler(int8s_t irqnum, void *arg)
 {
     /* Triggers alarms */
     eos_trigger_counter(&system_timer, NULL);
-    // eos_trigger_counter(&system_timer, NULL);
 }
 
 void _os_init_timer()
