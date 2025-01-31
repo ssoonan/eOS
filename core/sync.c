@@ -56,9 +56,8 @@ void eos_release_semaphore(eos_semaphore_t *sem)
     _os_node_t *head = sem->wait_queue;
     if (head)
     {
-        eos_tcb_t *sleeping_task = (eos_tcb_t *)(head);
-        _os_wakeup_sleeping_task(sleeping_task);
-        _os_remove_node(&head, head);
+        _os_wakeup_sleeping_task(head->ptr_data);
+        _os_remove_node(&sem->wait_queue, head);
     }
 }
 
