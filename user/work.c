@@ -41,7 +41,7 @@ void sender_task(void *arg)
         }
 
         // 다음 작업 전 잠깐 대기 (타임 슬라이스 양보)
-        eos_sleep(3);
+        eos_sleep(4);
     }
 }
 
@@ -133,14 +133,19 @@ static void receiver_task0(void *arg)
 
 void eos_user_main()
 {
-    eos_init_semaphore(&test_sem, 1, 0);
-    eos_create_task(&tcb0, (addr_t)stack0, 8096, sender_task, NULL, 50);
-    eos_create_task(&tcb1, (addr_t)stack1, 8096, receiver_task, NULL, 51);
-    eos_create_task(&tcb2, (addr_t)stack2, 8096, observer_task, NULL, 52);
-    // eos_set_period(&tcb0, 2);
-    // eos_set_period(&tcb1, 4);
-    // eos_set_period(&tcb2, 6);
-    // eos_init_mqueue(&mq0, queue0, 5, 2, 1);
-    // eos_init_mqueue(&mq1, queue1, 5, 2, 1);
+    // eos_init_semaphore(&test_sem, 1, 0);
+    // eos_create_task(&tcb0, (addr_t)stack0, 8096, sender_task, NULL, 50);
+    // eos_create_task(&tcb1, (addr_t)stack1, 8096, receiver_task, NULL, 50);
+    // eos_create_task(&tcb2, (addr_t)stack2, 8096, observer_task, NULL, 50);
 
+    eos_create_task(&tcb0, (addr_t)stack0, 8096, sender_task1, NULL, 50);
+    eos_create_task(&tcb1, (addr_t)stack1, 8096, receiver_task1, NULL, 10);
+    eos_create_task(&tcb2, (addr_t)stack2, 8096, receiver_task0, NULL, 10);
+
+    eos_set_period(&tcb0, 2);
+    eos_set_period(&tcb1, 4);
+    eos_set_period(&tcb2, 5);
+
+    eos_init_mqueue(&mq0, queue0, 5, 2, FIFO);
+    eos_init_mqueue(&mq1, queue1, 5, 2, FIFO);
 }

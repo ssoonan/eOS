@@ -204,9 +204,9 @@ typedef struct eos_mqueue
 {
     int16u_t queue_size;
     int8u_t msg_size;
-    int8u_t *queue_start;
-    _os_node_t *front;
-    _os_node_t *rear;
+    void *queue_start;
+    void *front;
+    void *rear;
     int8u_t queue_type;
     eos_semaphore_t *putsem;
     eos_semaphore_t *getsem;
