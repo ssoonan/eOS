@@ -118,12 +118,12 @@ typedef struct eos_alarm
 
 int8u_t eos_init_counter(eos_counter_t *counter, int32u_t init_value);
 
-void eos_set_alarm(_os_node_t **wait_queue, eos_alarm_t *alarm,
+void eos_set_alarm(eos_counter_t *counter, eos_alarm_t *alarm,
                    int32u_t timeout, void (*entry)(void *arg), void *arg);
 
 eos_counter_t *eos_get_system_timer();
 
-void eos_trigger_counter(eos_counter_t *counter, _os_node_t **queue);
+void eos_trigger_counter(eos_counter_t *counter);
 
 /********************************************************
  * Wait queue types
@@ -143,8 +143,8 @@ void eos_trigger_counter(eos_counter_t *counter, _os_node_t **queue);
 typedef struct eos_semaphore
 {
     int32s_t count;
-    int8u_t queue_type;
     _os_node_t *wait_queue;
+    int8u_t queue_type;
 
 } eos_semaphore_t;
 
@@ -236,6 +236,7 @@ int8u_t eos_receive_message(eos_mqueue_t *mq, void *message, int32s_t timeout);
 typedef struct tcb
 {
     int32u_t state;
+    int32u_t priority;
     addr_t stack_pointer;
     addr_t stack_start;
     int32u_t stack_size;
@@ -247,7 +248,7 @@ typedef struct tcb
     void *arg;
 
     _os_node_t *queueing_node;
-
+    eos_alarm_t *alarm;
 } eos_tcb_t;
 
 /**

@@ -19,20 +19,17 @@ int8u_t eos_init_counter(eos_counter_t *counter, int32u_t init_value)
     return 0;
 }
 
-void eos_set_alarm(_os_node_t **wait_queue, eos_alarm_t *alarm, int32u_t timeout, void (*entry)(void *arg), void *arg)
-{
-    _os_remove_node(wait_queue, &(alarm->alarm_queue_node));
-    if (timeout == 0 || timeout == NULL)
+void eos_set_alarm(eos_counter_t *counter, eos_alarm_t *alarm, int32u_t timeout, void (*entry)(void *arg), void *arg)
+{   
+    PRINT("alarm node: %x\n", alarm->alarm_queue_node.next);
+    _os_remove_node(&(counter->alarm_queue), &(alarm->alarm_queue_node));
+    if (timeout == 0 || entry == NULL)
         return;
-
-    alarm->timeout = timeout;
+    alarm->alarm_queue_node.priority = timeout;
     alarm->handler = entry;
     alarm->arg = arg;
-
-    alarm->alarm_queue_node.ptr_data = alarm;
-    alarm->alarm_queue_node.priority = timeout;
-
-    _os_add_node_tail(wait_queue, &(alarm->alarm_queue_node));
+    if (timeout > counter->tick)
+        _os_add_node_priority(&(counter->alarm_queue), &(alarm->alarm_queue_node));
 }
 
 eos_counter_t *eos_get_system_timer()
@@ -40,37 +37,28 @@ eos_counter_t *eos_get_system_timer()
     return &system_timer;
 }
 
-void eos_trigger_counter(eos_counter_t *counter, _os_node_t **queue)
+void eos_trigger_counter(eos_counter_t *counter)
 {
+    counter->tick++;
     PRINT("tick\n");
-    counter->tick += 1;
-    _os_node_t *head;
-    if (queue)
-        head = *queue;
-    else
-        head = counter->alarm_queue;
-    _os_node_t *alarm_node = head;
-    while (1)
+    while (counter->alarm_queue != NULL)
     {
-        eos_alarm_t *alarm = alarm_node->ptr_data;
-        eos_tcb_t *alarm_task = (eos_tcb_t *)(alarm->arg);
-        _os_node_t *next_node = alarm_node->next;
-
-        if (counter->tick >= alarm_task->sleep_at + alarm->timeout) {
-            alarm->handler(alarm->arg);
-            _os_remove_node(&(eos_get_system_timer()->alarm_queue), &alarm->alarm_queue_node);
-        }
-        alarm_node = next_node;
-        if (alarm_node == head) // 다 돌았을 때 종료
+        _os_node_t *next_node = counter->alarm_queue;
+        eos_tcb_t *next_task = (eos_tcb_t *)(next_node->ptr_data);
+        if (next_node->priority > counter->tick)
             break;
+        eos_set_alarm(eos_get_system_timer(), next_task->alarm, 0, NULL, NULL);
+        next_task->alarm->handler(next_task);
     }
+
+    eos_schedule();
 }
 
 /* Timer interrupt handler */
 static void timer_interrupt_handler(int8s_t irqnum, void *arg)
 {
     /* Triggers alarms */
-    eos_trigger_counter(&system_timer, NULL);
+    eos_trigger_counter(&system_timer);
 }
 
 void _os_init_timer()
