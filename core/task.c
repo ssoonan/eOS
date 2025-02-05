@@ -60,13 +60,13 @@ void eos_schedule()
     if (eos_get_current_task() != NULL)
     {
         eos_tcb_t *cur_task = eos_get_current_task();
-        addr_t sp = _os_save_context();
-        if (sp == NULL)
+        addr_t stack_pointer = _os_save_context();
+        if (stack_pointer == NULL)
             return;
         else
         {
             cur_task->state = READY;
-            cur_task->stack_pointer = sp;
+            cur_task->stack_pointer = stack_pointer;
             if (cur_task->period == 0)
             {
                 _os_add_node_tail(&_os_ready_queue[cur_task->priority], cur_task->queueing_node);

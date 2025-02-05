@@ -20,8 +20,7 @@ int8u_t eos_init_counter(eos_counter_t *counter, int32u_t init_value)
 }
 
 void eos_set_alarm(eos_counter_t *counter, eos_alarm_t *alarm, int32u_t timeout, void (*entry)(void *arg), void *arg)
-{   
-    PRINT("alarm node: %x\n", alarm->alarm_queue_node.next);
+{
     _os_remove_node(&(counter->alarm_queue), &(alarm->alarm_queue_node));
     if (timeout == 0 || entry == NULL)
         return;

@@ -41,13 +41,9 @@ int8u_t eos_send_message(eos_mqueue_t *mq, void *message, int32s_t timeout)
         // if 'rear' points the end of the queue, make 'rear' point the start of the queue
         // if not, make 'rear' point the next entry of the queue
         if (mq->rear == (int8u_t *)mq->queue_start + mq->queue_size * mq->msg_size)
-        {
             mq->rear = mq->queue_start;
-        }
         else
-        {
             mq->rear++;
-        }
     }
     // release semaphore
     eos_release_semaphore(&mq->getsem);
@@ -70,13 +66,9 @@ int8u_t eos_receive_message(eos_mqueue_t *mq, void *message, int32s_t timeout)
         // if 'front' points the end of the queue, make 'front' point the start of the queue
         // if not, make 'rear' point the next entry of the queue
         if (mq->front == (int8u_t *)mq->queue_start + mq->queue_size * mq->msg_size)
-        {
             mq->front = mq->queue_start;
-        }
         else
-        {
             mq->front++;
-        }
     }
     // release semaphore
     eos_release_semaphore(&mq->putsem);

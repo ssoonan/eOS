@@ -41,15 +41,11 @@ int32u_t eos_acquire_semaphore(eos_semaphore_t *sem, int32s_t timeout)
         {
             // push current task into waiting queue, and yield a CPU
             eos_tcb_t *cur_task = eos_get_current_task();
-            cur_task->state = 3; // WAITING
+            cur_task->state = WAITING; // WAITING
             if (sem->queue_type == FIFO)
-            {
-                _os_add_node_tail(&(sem->wait_queue), &(cur_task->queueing_node));
-            }
+                _os_add_node_tail(&(sem->wait_queue), cur_task->queueing_node);
             else if (sem->queue_type == PRIORITY)
-            {
-                _os_add_node_priority(&(sem->wait_queue), &(cur_task->queueing_node));
-            }
+                _os_add_node_priority(&(sem->wait_queue), cur_task->queueing_node);
             hal_enable_interrupt();
             eos_sleep(INFINITY);
 
@@ -81,14 +77,19 @@ int32u_t eos_acquire_semaphore(eos_semaphore_t *sem, int32s_t timeout)
 
 void eos_release_semaphore(eos_semaphore_t *sem)
 {
+    hal_disable_interrupt();
     sem->count++;
-    if (sem->wait_queue)
+    if (sem->wait_queue == NULL)
     {
-        eos_tcb_t *wake_task = (eos_tcb_t *)(sem->wait_queue->ptr_data);
-        eos_set_alarm(eos_get_system_timer(), wake_task->alarm, 0, NULL, NULL);
-        _os_remove_node(&(sem->wait_queue), sem->wait_queue);
-        _os_wakeup_sleeping_task((void *)wake_task);
+        hal_enable_interrupt();
+        return;
     }
+    hal_enable_interrupt();
+    PRINT("wait_queue: %x\n", sem->wait_queue);
+    eos_tcb_t *wake_task = (eos_tcb_t *)(sem->wait_queue->ptr_data);
+    // PRINT("node: %x\n", wake_task->queueing_node);
+    _os_remove_node(&(sem->wait_queue), wake_task->queueing_node);
+    _os_wakeup_sleeping_task((void *)wake_task);
 }
 
 void eos_init_condition(eos_condition_t *cond, int32u_t queue_type)
