@@ -55,14 +55,14 @@ static void receiver_task2(void *arg)
 
 void eos_user_main()
 {
-    eos_create_task(&tcb1, (addr_t)stack1, 8096, sender_task, NULL, 60);
-    eos_create_task(&tcb2, (addr_t)stack2, 8096, receiver_task1, NULL, 10);
+    eos_create_task(&tcb1, (addr_t)stack1, 8096, sender_task, NULL, 50);
+    eos_create_task(&tcb2, (addr_t)stack2, 8096, receiver_task1, NULL, 20);
     eos_create_task(&tcb3, (addr_t)stack3, 8096, receiver_task2, NULL, 10);
 
     eos_set_period(&tcb1, 2);
     eos_set_period(&tcb2, 4);
-    eos_set_period(&tcb3, 5);
+    eos_set_period(&tcb3, 1);
 
-    eos_init_mqueue(&mq1, queue1, 5, 2, FIFO);
-    eos_init_mqueue(&mq2, queue2, 5, 2, FIFO);
+    eos_init_mqueue(&mq1, queue1, 5, 2, PRIORITY);
+    eos_init_mqueue(&mq2, queue2, 5, 2, PRIORITY);
 }

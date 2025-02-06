@@ -85,9 +85,7 @@ void eos_release_semaphore(eos_semaphore_t *sem)
         return;
     }
     hal_enable_interrupt();
-    PRINT("wait_queue: %x\n", sem->wait_queue);
     eos_tcb_t *wake_task = (eos_tcb_t *)(sem->wait_queue->ptr_data);
-    // PRINT("node: %x\n", wake_task->queueing_node);
     _os_remove_node(&(sem->wait_queue), wake_task->queueing_node);
     _os_wakeup_sleeping_task((void *)wake_task);
 }
