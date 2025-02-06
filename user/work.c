@@ -5,17 +5,17 @@
 static eos_tcb_t tcb1;
 static eos_tcb_t tcb2;
 static eos_tcb_t tcb3;
-static int8u_t stack1[STACK_SIZE];
-static int8u_t stack2[STACK_SIZE];
-static int8u_t stack3[STACK_SIZE];
-static int8u_t queue1[10];
-static int8u_t queue2[10];
+static int32u_t stack1[STACK_SIZE];
+static int32u_t stack2[STACK_SIZE];
+static int32u_t stack3[STACK_SIZE];
+static int32u_t queue1[10];
+static int32u_t queue2[10];
 eos_mqueue_t mq1;
 eos_mqueue_t mq2;
 
 static void sender_task(void *arg)
 {
-    int8u_t *data = "xy";
+    int32u_t *data = "xy";
 
     while (1)
     {
@@ -29,7 +29,7 @@ static void sender_task(void *arg)
 
 static void receiver_task1(void *arg)
 {
-    int8u_t data[2];
+    int32u_t data[2];
 
     while (1)
     {
@@ -42,7 +42,7 @@ static void receiver_task1(void *arg)
 
 static void receiver_task2(void *arg)
 {
-    int8u_t data[2];
+    int32u_t data[2];
 
     while (1)
     {
@@ -61,7 +61,7 @@ void eos_user_main()
 
     eos_set_period(&tcb1, 2);
     eos_set_period(&tcb2, 4);
-    eos_set_period(&tcb3, 1);
+    eos_set_period(&tcb3, 6);
 
     eos_init_mqueue(&mq1, queue1, 5, 2, PRIORITY);
     eos_init_mqueue(&mq2, queue2, 5, 2, PRIORITY);
